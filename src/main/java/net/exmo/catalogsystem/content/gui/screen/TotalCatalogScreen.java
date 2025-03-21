@@ -17,10 +17,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import se.mickelus.mutil.gui.GuiAttachment;
-import se.mickelus.mutil.gui.GuiButton;
-import se.mickelus.mutil.gui.GuiElement;
-import se.mickelus.mutil.gui.GuiTexture;
+import se.mickelus.mutil.gui.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,10 +32,10 @@ public class TotalCatalogScreen extends AbstractContainerScreen<TotalCatalogMenu
 	private final HashMap<String, String> textstate = new HashMap<>();
 
 	private final static int maxButtonNum = 6;
-	private final static int buttonOffsetWidth = 160;
-	private final static int buttonOffsetHeight = 160;
-	private final static int buttonGapWidth = 170;
-	private final static int buttonGapHeight = 170;
+	private final static int buttonGapWidth = 50;
+	private final static int buttonGapHeight = 50;
+	private final static int buttonWidth = 30;
+	private final static int buttonHeight = 30;
 	private int buttonNum;
 
 	// GuiButton extends GuiClickable extends GuiElement
@@ -84,64 +81,72 @@ public class TotalCatalogScreen extends AbstractContainerScreen<TotalCatalogMenu
 		this.y = container.y;
 		this.z = container.z;
 		this.entity = container.entity;
-		this.imageWidth = 100;
-		this.imageHeight = 100;
+		this.imageWidth = 176;
+		this.imageHeight = 166;
 		this.buttonNum = 0;
 		this.page = 0;
 		pagesSet();
 		// 1 2 3
 		// 4 5 6
 		//add
-		this.guiDefault = new GuiElement(0, 0, this.width, this.height);
+		this.guiDefault = new GuiElement(0, 0, this.imageWidth, this.imageHeight);
+		this.guiDefault.addChild(new GuiRect(0, 0, this.imageWidth, this.imageHeight, 0xff0000));
+//		guiDefault.setAttachment(GuiAttachment.middleCenter);
 		//TODO: Menu Texture
 
-		this.guiButtonsBase = new GuiElement(0, 0, this.width, this.height);
+		int guiButtonBaseWidth = buttonWidth + 2 * buttonGapWidth;
+		int guiButtonBaseHeight = buttonHeight + buttonGapHeight;
+		int guiButtonBaseOffsetX = (this.imageWidth - buttonWidth - 2 * buttonGapWidth) / 2;
+		int guiButtonBaseOffsetY = (this.imageHeight - buttonHeight - buttonGapHeight) / 2;
+		this.guiButtonsBase = new GuiElement(guiButtonBaseOffsetX, guiButtonBaseOffsetY, guiButtonBaseWidth, guiButtonBaseHeight);
+		this.guiButtonsBase.addChild(new GuiRect(0, 0, guiButtonBaseWidth, guiButtonBaseHeight, 0x0000ff));
 
-		guiButtonsBase.setAttachment(GuiAttachment.middleCenter);
-		guiDefault.setAttachment(GuiAttachment.middleCenter);
+//		guiButtonsBase.setAttachment(GuiAttachment.middleCenter);
+
 		for(int i = 0; i < pages.get(page).size(); ++i) {
-				// TODO: should text for button diff?
-				Map.Entry<ResourceLocation, Catalog> resourceLocationCatalogEntry = pages.get(page).get(i);
-				String buttonText = I18n.get("message.catalog_system.gui.total_catalog." + resourceLocationCatalogEntry.getKey().toString());
+			// TODO: should text for button diff?
+			Map.Entry<ResourceLocation, Catalog> resourceLocationCatalogEntry = pages.get(page).get(i);
+			String buttonText = I18n.get("message.catalog_system.gui.total_catalog." + resourceLocationCatalogEntry.getKey().toString());
 
-					GuiButton guiButton = new GuiButton(getButtonX(i), getButtonY(i),imageWidth,imageHeight, buttonText, () -> {
-					openCatalogEntry(resourceLocationCatalogEntry.getKey().toString());
-				});
-					guiButton.setAttachment(GuiAttachment.middleCenter);
-//				int offsetx = 0;
-//				if (i >= 3){
-//					offsetx += (i-3)*100;
-//				}else offsetx += (i)*100;
-//				int offsety = 0;
-//				if (i>=3){
-//					offsety = 100;
-//				}
+			GuiButton guiButton = new GuiButton(getButtonX(i) - guiButtonBaseWidth / 2, getButtonY(i) - guiButtonBaseHeight / 2,
+					buttonWidth, buttonHeight, buttonText,
+					() -> openCatalogEntry(resourceLocationCatalogEntry.getKey().toString()));
+			guiButton.addChild(new GuiRect(0, 0, buttonWidth, buttonHeight, 0x00ff00));
+//			guiButton.setAttachment(GuiAttachment.topLeft);
+//			int offsetx = 0;
+//			if (i >= 3){
+//				offsetx += (i-3)*100;
+//			}else offsetx += (i)*100;
+//			int offsety = 0;
+//			if (i>=3){
+//				offsety = 100;
+//			}
 
 			ResourceLocation resourceLocation = CSRes.weaponCatalogMenu;
 			ResourceLocation guiTexture = resourceLocationCatalogEntry.getValue().getGuiTexture();
-			if (guiTexture != null)resourceLocation = guiTexture;
-			this.guiDefault.addChild(new GuiTexture(getButtonX(i), getButtonY(i), imageWidth, imageHeight, resourceLocation));
-				this.guiButtonsBase.addChild(guiButton);
-			}
-
-
-
+			if (guiTexture != null) resourceLocation = guiTexture;
+//			this.guiButtonsBase.addChild(new GuiTexture(getButtonX(i), getButtonY(i), buttonWidth, buttonHeight, resourceLocation));
+			this.guiButtonsBase.addChild(guiButton);
+		}
+		this.guiDefault.addChild(this.guiButtonsBase);
 	}
-	private  int getW2(){
-		return this.width/2;
-	}
-	private int getH2(){
-		return this.height/2;
-	}
+//	private int getW2(){
+//		return this.width/2;
+//	}
+//	private int getH2(){
+//		return this.height/2;
+//	}
 
 	private int getButtonX(int index){
-		int columnIndex = index % 3 - 1;
-		return width+ columnIndex * buttonGapWidth + buttonOffsetWidth;
+		int columnIndex = index % 3;
+		int buttonOffsetX = buttonGapWidth + buttonWidth/2;
+		return buttonOffsetX + columnIndex * buttonGapWidth;
 	}
 
 	private int getButtonY(int index){
-		int rowIndex = index / 3 - 1;
-		return getH2() + rowIndex * buttonGapHeight + buttonOffsetHeight;
+		int rowIndex = index / 3;
+		int buttonOffsetY = buttonGapHeight/2 + buttonHeight/2;
+		return buttonOffsetY + rowIndex * buttonGapHeight;
 	}
 
 	public void openCatalogEntry(String id){
@@ -200,11 +205,16 @@ public class TotalCatalogScreen extends AbstractContainerScreen<TotalCatalogMenu
 		RenderSystem.setShaderColor(1, 1, 1, 1);
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
+		guiGraphics.blit(new ResourceLocation("weapon_catalog:textures/screens/weapon_catalog.png"),
+			this.leftPos - 39, this.topPos - 20, 0, 0, 248, 190, 248, 190);
+		int x = (this.width - this.imageWidth) / 2;
+		int y = (this.height - this.imageHeight) / 2;
+
 		this.guiDefault.updateFocusState(x, y, gx, gy);
 		this.guiDefault.draw(guiGraphics, x, y, this.width, this.height, gx, gy, 1.0F);
 
-		this.guiButtonsBase.updateFocusState(x, y, gx, gy);
-		this.guiButtonsBase.draw(guiGraphics, x, y, this.width, this.height, gx, gy, 1.0F);
+//		this.guiButtonsBase.updateFocusState(x, y, gx, gy);
+//		this.guiButtonsBase.draw(guiGraphics, x, y, this.width, this.height, gx, gy, 1.0F);
 
 
 
