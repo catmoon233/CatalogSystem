@@ -189,7 +189,7 @@ public class TotalCatalogScreen extends AbstractContainerScreen<TotalCatalogMenu
 	@Override
 	public boolean mouseClicked(double d, double b, int p_97750_) {
 		for (GuiElement guiElement : this.guiButtonsBase.getChildren()){
-			if( ((GuiButton) guiElement).onMouseClick((int) d, (int) b, p_97750_)) return true;
+			if (guiElement instanceof GuiButton) if( ((GuiButton) guiElement).onMouseClick((int) d, (int) b, p_97750_)) return true;
 //			if ( d >= guiElement.getX() && d <= guiElement.getX() + guiElement.getWidth() && b >= guiElement.getY() && b <= guiElement.getY() + guiElement.getHeight()){
 //				if (guiElement instanceof GuiButton){
 //

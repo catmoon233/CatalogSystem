@@ -2,6 +2,7 @@
   "message.catalogsystem.unlock_item": "§a物品图鉴已解锁物品 §r",
   "message.catalog_system.gui.total_catalog.catalogsystem:weapon_catalog": "§7武器图鉴",
   "message.catalog_system.gui.total_catalog.catalogsystem:armor_catalog": "§7护甲图鉴",
+  "message.catalog_system.gui.total_catalog.catalogsystem:slashblade_catalog": "§7拔刀剑图鉴",
 
   "tooltip.catalog_system.unlock_item": "§a已解锁 ",
   "tooltip.catalog_system.lock_item": "§c未解锁 ",

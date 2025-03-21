@@ -1,14 +1,18 @@
 package net.exmo.catalogsystem.content.gui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.exmo.catalogsystem.Catalogsystem;
 import net.exmo.catalogsystem.content.Catalog;
 import net.exmo.catalogsystem.content.CatalogHandle;
 import net.exmo.catalogsystem.content.gui.menu.CatalogEntryMenu;
 import net.exmo.catalogsystem.content.gui.menu.TotalCatalogMenu;
 import net.exmo.catalogsystem.network.CatalogModVariables;
+import net.exmo.catalogsystem.network.OpenCatalogKeyMessage;
 import net.exmo.catalogsystem.util.ItemSelector;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -16,6 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,8 +55,7 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 		entity.getCapability(CatalogModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
 			capability.syncPlayerVariables(entity);
 
-			 hadList_ = new ArrayList<>(capability.HadWeaponGather);
-			hadList_.removeIf(itemSelector -> !catalog.get().keySet().stream().filter(itemSelector1 -> !itemSelector.compareItemSelector(itemSelector1)).toList().isEmpty());
+			 hadList_ = new ArrayList<>(capability.HadWeaponGather).stream().filter(itemSelector -> catalog.get().keySet().stream().anyMatch(itemSelector1 -> itemSelector1.compareItemSelector(itemSelector))).toList();;
 			List<ItemSelector> reList = new ArrayList<>(catalog.get().keySet());
 			for (ItemSelector itemSelector : hadList_) {
 				reList = reList.stream().filter(itemSelector1 -> !itemSelector1.compareItemSelector(itemSelector)).toList();
@@ -155,12 +159,21 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 					} else {
 						guiGraphics.blit(new ResourceLocation("weapon_catalog:textures/screens/weapon_catalog_selected_slot.png"), xPos, yPos, 0, 0, 18, 18, 18, 18);
 					}
+					ItemStack itemStack =null;
+					ItemSelector itemSelector = currentPageItems.get(j);
+					Item item = itemSelector.item();
+					if (itemSelector.renderStack()!=null)itemStack = itemSelector.renderStack();
+					else if (item != null) {
+						//String color = (j + currentPage * 96 >= hasCount) ? "\u00a77" : "\u00a7l";
 
-					Item item = currentPageItems.get(j).item();
-					if (item != null) {
-						String color = (j + currentPage * 96 >= hasCount) ? "\u00a77" : "\u00a7l";
+						itemStack = item.getDefaultInstance();
+						List<CompoundTag> compoundTags = itemSelector.containNBT();
+						for (CompoundTag compoundTag : compoundTags) {
+							itemStack.getOrCreateTag().merge(compoundTag);
 
-						ItemStack itemStack = item.getDefaultInstance();
+						}
+					}
+					if (itemStack != null) {
 						itemStack.getOrCreateTag().putBoolean("CateLogItem", true);
 
 						// Render the item at the new position
@@ -195,6 +208,11 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 
 	@Override
 	public boolean keyPressed(int key, int b, int c) {
+		if (key == GLFW.GLFW_KEY_E){
+			Catalogsystem.PACKET_HANDLER.sendToServer(new OpenCatalogKeyMessage(0, 0));
+			OpenCatalogKeyMessage.pressAction(Minecraft.getInstance().player, 0, 0);
+			return true;
+		}
 		if (key == 256) {
 			this.minecraft.player.closeContainer();
 			return true;

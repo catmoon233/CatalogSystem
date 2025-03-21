@@ -2,6 +2,7 @@ package net.exmo.catalogsystem.content.event;
 
 import net.exmo.catalogsystem.content.Catalog;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.eventbus.api.Event;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 public class CatalogRegisterEvent  extends Event {
     private Map<ResourceLocation, Catalog> catalogs;
+    public AddReloadListenerEvent event;
     public Map<ResourceLocation, Catalog> getCatalogs()
     {
         return catalogs;

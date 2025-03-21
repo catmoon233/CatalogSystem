@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.Objects;
 
 public record ItemSelector(Item item, String itemId, List<CompoundTag> containNBT,
-                           net.exmo.catalogsystem.util.ItemSelector.CompareType type, List<TagKey<Item>> containTag) {
+                           net.exmo.catalogsystem.util.ItemSelector.CompareType type, List<TagKey<Item>> containTag,ItemStack renderStack) {
+
 
     public enum CompareType {
         TAG,
@@ -35,19 +36,20 @@ public record ItemSelector(Item item, String itemId, List<CompoundTag> containNB
      * @param type       比较类型
      * @param containTag 包含的标签列表（如果适用）
      */
-    public ItemSelector(Item item, String itemId, List<CompoundTag> containNBT, CompareType type, List<TagKey<Item>> containTag) {
+    public ItemSelector(Item item, String itemId, List<CompoundTag> containNBT, CompareType type, List<TagKey<Item>> containTag, ItemStack renderStack) {
         this.item = item;
         this.itemId = itemId;
         this.containNBT = containNBT != null ? containNBT : List.of();
         this.type = type;
         this.containTag = containTag != null ? containTag : List.of();
+        this.renderStack = renderStack;
     }
 
     //    public static ItemSelector formItemStack(ItemStack stack){
 //
 //    }
     public static ItemSelector fromItem(Item item) {
-        return new ItemSelector(item, null, null, CompareType.ITEM, null);
+        return new ItemSelector(item, null, null, CompareType.ITEM, null,null);
     }
 
     /**
@@ -62,6 +64,7 @@ public record ItemSelector(Item item, String itemId, List<CompoundTag> containNB
         return switch (type) {
             case TAG -> checkTags(stack);
             case ID -> Objects.equals(ForgeRegistries.ITEMS.getKey(stack.getItem()).toString(), itemId);
+
             case ITEM -> Objects.equals(stack.getItem(), item);
             case NBT -> checkNBT(stack);
             case NBT_AND_ITEM -> Objects.equals(stack.getItem(), item) && checkNBT(stack);
@@ -71,10 +74,10 @@ public record ItemSelector(Item item, String itemId, List<CompoundTag> containNB
         };
     }
     public boolean compareItemSelector(ItemSelector itemSelector){
-        if (itemSelector.item != null && itemSelector.item != item) return false;
-        if (itemSelector.itemId !=null && !itemSelector.itemId.equals(itemId)) return false;
-        if (itemSelector.containNBT !=null && !itemSelector.containNBT.equals(containNBT)) return false;
-        if (itemSelector.containTag !=null && !itemSelector.containTag.equals(containTag)) return false;
+        if (itemSelector.item != null && item!=null&& itemSelector.item != item) return false;
+        if (itemSelector.itemId !=null&&itemId!=null && !itemSelector.itemId.equals(itemId)) return false;
+        if (itemSelector.containNBT !=null&&containNBT !=null && !itemSelector.containNBT.equals(containNBT)) return false;
+        if (itemSelector.containTag !=null && containTag !=null &&!itemSelector.containTag.equals(containTag)) return false;
 
         return true;
     }
@@ -92,17 +95,35 @@ public record ItemSelector(Item item, String itemId, List<CompoundTag> containNB
         CompoundTag stackTag = stack.getTag();
         if (stackTag == null) return containNBT.isEmpty();
 
-        for (CompoundTag nbt : containNBT) {
-            // 检查所有键是否存在
-            boolean allKeysPresent = nbt.getAllKeys().stream().allMatch(stackTag::contains);
-            // 检查所有键值对是否相等
-            boolean allValuesEqual = allKeysPresent && stackTag.equals(nbt);
-            if (allValuesEqual) {
+        for (CompoundTag conditionNBT : containNBT) {
+            if (isSubset(conditionNBT, stackTag)) {
                 return true;
             }
         }
         return false;
     }
+
+    // 递归检查条件NBT是否为堆叠NBT的子集
+    private boolean isSubset(CompoundTag condition, CompoundTag target) {
+        for (String key : condition.getAllKeys()) {
+            Tag conditionTag = condition.get(key);
+            Tag targetTag = target.get(key);
+
+            if (targetTag == null) return false;
+
+            if (conditionTag instanceof CompoundTag conditionCompound) {
+                if (!(targetTag instanceof CompoundTag targetCompound) ||
+                        !isSubset(conditionCompound, targetCompound)) {
+                    return false;
+                }
+            } else if (!conditionTag.equals(targetTag)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
 
     /**
      * 将ItemSelector对象序列化为NBT数据。
@@ -121,6 +142,10 @@ public record ItemSelector(Item item, String itemId, List<CompoundTag> containNB
 
         // 序列化CompareType
         tag.putString("CompareType", type.name());
+        if (renderStack!=null) {
+            tag.put("renderItem",renderStack.serializeNBT());
+        }
+
 
         // 序列化ContainNBT
         ListTag nbtList = new ListTag();
@@ -173,7 +198,8 @@ public record ItemSelector(Item item, String itemId, List<CompoundTag> containNB
                 }
             }
         }
-
-        return new ItemSelector(item, itemId, containNBT, type, containTag);
+        ItemStack renderStack = null;
+        if (tag.contains("renderItem"))renderStack = ItemStack.of(tag.getCompound("renderItem"));
+        return new ItemSelector(item, itemId, containNBT, type, containTag,renderStack);
     }
 }

@@ -103,7 +103,9 @@ public class CommonEvent {
         List<AttriGether> weaponAttributes = new ArrayList<>();
         for (Catalog catalog : catalogs) {
             for (ItemSelector itemSelector : itemSelector1) {
-                weaponAttributes.addAll(List.of(catalog.get().get(itemSelector)));
+                AttriGether[] elements = catalog.get().get(itemSelector);
+                if (elements == null)continue;
+                weaponAttributes.addAll(List.of(elements));
             }
         }
         for (AttriGether weaponAttribute : weaponAttributes){
