@@ -30,16 +30,9 @@ public class TotalCatalogScreen extends AbstractContainerScreen<TotalCatalogMenu
 	private final int x, y, z;
 	private final Player entity;
 	private final HashMap<String, String> textstate = new HashMap<>();
-
-	private final static int maxButtonNum = 6;
-	private final static int buttonGapWidth = 50;
-	private final static int buttonGapHeight = 50;
-	private final static int buttonWidth = 30;
-	private final static int buttonHeight = 30;
 	private int buttonNum;
 
 	// GuiButton extends GuiClickable extends GuiElement
-	private GuiElement guiButtonsBase; //Base for all buttons
 	private GuiElement guiDefault;
 	private final Map<ResourceLocation,Catalog> catalogs = CatalogHandle.getCatalogs();
 	private Map<Integer,List<Map.Entry<ResourceLocation,Catalog>>> pages;
@@ -93,13 +86,6 @@ public class TotalCatalogScreen extends AbstractContainerScreen<TotalCatalogMenu
 		this.guiDefault.addChild(new GuiRect(0, 0, this.imageWidth, this.imageHeight, 0xff0000));
 //		guiDefault.setAttachment(GuiAttachment.middleCenter);
 		//TODO: Menu Texture
-
-		int guiButtonBaseWidth = buttonWidth + 2 * buttonGapWidth;
-		int guiButtonBaseHeight = buttonHeight + buttonGapHeight;
-		int guiButtonBaseOffsetX = (this.imageWidth - buttonWidth - 2 * buttonGapWidth) / 2;
-		int guiButtonBaseOffsetY = (this.imageHeight - buttonHeight - buttonGapHeight) / 2;
-		this.guiButtonsBase = new GuiElement(guiButtonBaseOffsetX, guiButtonBaseOffsetY, guiButtonBaseWidth, guiButtonBaseHeight);
-		this.guiButtonsBase.addChild(new GuiRect(0, 0, guiButtonBaseWidth, guiButtonBaseHeight, 0x0000ff));
 
 //		guiButtonsBase.setAttachment(GuiAttachment.middleCenter);
 
