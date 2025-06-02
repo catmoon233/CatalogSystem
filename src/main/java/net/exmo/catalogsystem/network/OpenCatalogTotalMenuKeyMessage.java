@@ -3,7 +3,7 @@ package net.exmo.catalogsystem.network;
 
 
 import net.exmo.catalogsystem.Catalogsystem;
-import net.exmo.catalogsystem.content.gui.menu.TotalCatalogMenu;
+import net.exmo.catalogsystem.content.gui.menu.CatalogTotalMenu;
 import net.exmo.catalogsystem.util.PlayerUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -16,35 +16,38 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
-public class OpenCatalogKeyMessage {
-	int type, pressedms;
+import static net.exmo.catalogsystem.Catalogsystem.manager;
 
-	public OpenCatalogKeyMessage(int type, int pressedms) {
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+public class OpenCatalogTotalMenuKeyMessage {
+    private static int pressedms1;
+    int type, pressedms;
+
+	public OpenCatalogTotalMenuKeyMessage(int type, int pressedms) {
 		this.type = type;
 		this.pressedms = pressedms;
 	}
 
-	public OpenCatalogKeyMessage(FriendlyByteBuf buffer) {
+	public OpenCatalogTotalMenuKeyMessage(FriendlyByteBuf buffer) {
 		this.type = buffer.readInt();
 		this.pressedms = buffer.readInt();
 	}
 
-	public static void buffer(OpenCatalogKeyMessage message, FriendlyByteBuf buffer) {
+	public static void buffer(OpenCatalogTotalMenuKeyMessage message, FriendlyByteBuf buffer) {
 		buffer.writeInt(message.type);
 		buffer.writeInt(message.pressedms);
 	}
 
-	public static void handler(OpenCatalogKeyMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
+	public static void handler(OpenCatalogTotalMenuKeyMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
 		NetworkEvent.Context context = contextSupplier.get();
-		context.enqueueWork(() -> {
-			pressAction(context.getSender(), message.type, message.pressedms);
-		});
+		if (message.type == 0) {
+			context.enqueueWork(() -> pressAction(context.getSender(), message.type, message.pressedms));
+		}
 		context.setPacketHandled(true);
 	}
 
 	public static void pressAction(Player entity, int type, int pressedms) {
-		Level world = entity.level();
+        Level world = entity.level();
 		double x = entity.getX();
 		double y = entity.getY();
 		double z = entity.getZ();
@@ -52,13 +55,13 @@ public class OpenCatalogKeyMessage {
 		if (!world.hasChunkAt(entity.blockPosition()))
 			return;
 		if (type == 0) {
-
-            new PlayerUtil.MenuGen<>(TotalCatalogMenu.class).OpenGui(entity, Component.literal("Catalog"));
+			manager.resetScreen();
+			manager.openScreen(() -> new PlayerUtil.MenuGen<>(CatalogTotalMenu.class).OpenGui(entity, Component.literal("Catalog")));
 		}
 	}
 
 	@SubscribeEvent
 	public static void registerMessage(FMLCommonSetupEvent event) {
-		Catalogsystem.addNetworkMessage(OpenCatalogKeyMessage.class, OpenCatalogKeyMessage::buffer, OpenCatalogKeyMessage::new, OpenCatalogKeyMessage::handler);
+		Catalogsystem.addNetworkMessage(OpenCatalogTotalMenuKeyMessage.class, OpenCatalogTotalMenuKeyMessage::buffer, OpenCatalogTotalMenuKeyMessage::new, OpenCatalogTotalMenuKeyMessage::handler);
 	}
 }

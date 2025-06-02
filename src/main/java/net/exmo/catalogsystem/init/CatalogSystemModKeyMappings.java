@@ -2,7 +2,7 @@
 package net.exmo.catalogsystem.init;
 
 import net.exmo.catalogsystem.Catalogsystem;
-import net.exmo.catalogsystem.network.OpenCatalogKeyMessage;
+import net.exmo.catalogsystem.network.OpenCatalogTotalMenuKeyMessage;
 
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -22,8 +22,8 @@ public class CatalogSystemModKeyMappings {
 		public void setDown(boolean isDown) {
 			super.setDown(isDown);
 			if (isDownOld != isDown && isDown) {
-				Catalogsystem.PACKET_HANDLER.sendToServer(new OpenCatalogKeyMessage(0, 0));
-				OpenCatalogKeyMessage.pressAction(Minecraft.getInstance().player, 0, 0);
+				Catalogsystem.PACKET_HANDLER.sendToServer(new OpenCatalogTotalMenuKeyMessage(0, 0));
+				OpenCatalogTotalMenuKeyMessage.pressAction(Minecraft.getInstance().player, 0, 0);
 			}
 			isDownOld = isDown;
 		}

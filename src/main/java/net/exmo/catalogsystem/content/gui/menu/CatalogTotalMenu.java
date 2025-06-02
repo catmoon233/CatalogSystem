@@ -1,7 +1,9 @@
 
 package net.exmo.catalogsystem.content.gui.menu;
 
+import net.exmo.catalogsystem.Catalogsystem;
 import net.exmo.catalogsystem.init.WeaponCatalogModMenus;
+import net.exmo.exmodifier.Exmodifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.Entity;
@@ -20,11 +22,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class TotalCatalogMenu extends AbstractContainerMenu implements Supplier<Map<Integer, Slot>> {
-	public final static HashMap<String, Object> guistate = new HashMap<>();
+public class CatalogTotalMenu extends AbstractContainerMenu implements Supplier<Map<Integer, Slot>> {
+	public final static HashMap<String, Object> guiState = new HashMap<>();
 	public final Level world;
-	public final Player entity;
+	public final Player player;
 	public int x, y, z;
+	public int pageIndex;
 	private ContainerLevelAccess access = ContainerLevelAccess.NULL;
 	private IItemHandler internal;
 	private final Map<Integer, Slot> customSlots = new HashMap<>();
@@ -32,25 +35,36 @@ public class TotalCatalogMenu extends AbstractContainerMenu implements Supplier<
 	private Supplier<Boolean> boundItemMatcher = null;
 	private Entity boundEntity = null;
 	private BlockEntity boundBlockEntity = null;
+	public String id;
 
-	public TotalCatalogMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
+	public CatalogTotalMenu(int id, Inventory inv, FriendlyByteBuf extraData, int pageIndex) {
 		super(WeaponCatalogModMenus.WEAPON_CATALOG.get(), id);
-		this.entity = inv.player;
+		this.pageIndex = pageIndex;
+		this.player = inv.player;
 		this.world = inv.player.level();
 		this.internal = new ItemStackHandler(0);
-		BlockPos pos = null;
-		if (extraData != null) {
-			try {
-				pos = extraData.readBlockPos();  // Ensure this does not throw an exception
-				this.x = pos.getX();
-				this.y = pos.getY();
-				this.z = pos.getZ();
-				access = ContainerLevelAccess.create(world, pos);
-			} catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
-				ex.printStackTrace();
-				throw new RuntimeException("Failed to read block position from buffer", ex);
-			}
+		Catalogsystem.LOGGER.info("1draw page: {}", pageIndex);
+//		if (extraData != null) {
+//			try {
+//				BlockPos pos = extraData.readBlockPos();  // Ensure this does not throw an exception
+//				this.x = pos.getX();
+//				this.y = pos.getY();
+//				this.z = pos.getZ();
+//				access = ContainerLevelAccess.create(world, pos);
+//			} catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
+//				ex.printStackTrace();
+//				throw new RuntimeException("Failed to read block position from buffer", ex);
+//			}
+//		}
+		try {
+			this.id = extraData.readUtf();
+		}catch (IllegalArgumentException ex){
+			Exmodifier.LOGGER.error("Failed to read block position from buffer",ex);
 		}
+	}
+
+	public CatalogTotalMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
+		this(id, inv, extraData, 0);
 	}
 
 	@Override

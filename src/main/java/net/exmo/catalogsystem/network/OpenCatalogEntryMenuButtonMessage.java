@@ -5,10 +5,8 @@ package net.exmo.catalogsystem.network;
 import io.netty.buffer.Unpooled;
 import net.exmo.catalogsystem.Catalogsystem;
 import net.exmo.catalogsystem.content.gui.menu.CatalogEntryMenu;
-import net.exmo.catalogsystem.content.gui.menu.TotalCatalogMenu;
-import net.exmo.catalogsystem.util.PlayerUtil;
+import net.exmo.catalogsystem.content.gui.menu.CatalogTotalMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,44 +20,43 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkHooks;
+import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
-public class OpenEntryCatalogMenuButtonMessage {
-	private final int buttonID, x, y, z;
-	private HashMap<String, String> textstate;
+public class OpenCatalogEntryMenuButtonMessage {
+	private final int x, y, z;
+	private final int buttonID;
+	private final HashMap<String, String> textState;
 
-	public OpenEntryCatalogMenuButtonMessage(FriendlyByteBuf buffer) {
+	public OpenCatalogEntryMenuButtonMessage(FriendlyByteBuf buffer) {
 		this.buttonID = buffer.readInt();
 		this.x = buffer.readInt();
 		this.y = buffer.readInt();
 		this.z = buffer.readInt();
-		this.textstate = readTextState(buffer);
+		this.textState = readTextState(buffer);
 	}
 
-	public OpenEntryCatalogMenuButtonMessage(int buttonID, int x, int y, int z, HashMap<String, String> textstate) {
+	public OpenCatalogEntryMenuButtonMessage(int buttonID, int x, int y, int z, HashMap<String, String> textState) {
 		this.buttonID = buttonID;
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.textstate = textstate;
-
+		this.textState = textState;
 	}
 
-	public static void buffer(OpenEntryCatalogMenuButtonMessage message, FriendlyByteBuf buffer) {
+	public static void buffer(OpenCatalogEntryMenuButtonMessage message, FriendlyByteBuf buffer) {
 		buffer.writeInt(message.buttonID);
 		buffer.writeInt(message.x);
 		buffer.writeInt(message.y);
 		buffer.writeInt(message.z);
-		writeTextState(message.textstate, buffer);
+		writeTextState(message.textState, buffer);
 	}
 
-	public static void handler(OpenEntryCatalogMenuButtonMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
+	public static void handler(OpenCatalogEntryMenuButtonMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
 		NetworkEvent.Context context = contextSupplier.get();
 		context.enqueueWork(() -> {
 			Player entity = context.getSender();
@@ -67,49 +64,55 @@ public class OpenEntryCatalogMenuButtonMessage {
 			int x = message.x;
 			int y = message.y;
 			int z = message.z;
-			HashMap<String, String> textstate = message.textstate;
-			handleButtonAction(entity, buttonID, x, y, z, textstate);
+			HashMap<String, String> textState = message.textState;
+			handleButtonAction(entity, buttonID, x, y, z, textState);
 		});
 		context.setPacketHandled(true);
 	}
 
-	public static void handleButtonAction(Player entity, int buttonID, int x, int y, int z, HashMap<String, String> textstate) {
+	public static void handleButtonAction(Player entity, int buttonID, int x, int y, int z, HashMap<String, String> textState) {
 		Level world = entity.level();
-		HashMap guistate = TotalCatalogMenu.guistate;
-		for (Map.Entry<String, String> entry : textstate.entrySet()) {
+		//TODO: what is guiState used for?
+		HashMap<String, Object> guiState = CatalogTotalMenu.guiState;
+		for (Map.Entry<String, String> entry : textState.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
-			guistate.put(key, value);
+			guiState.put(key, value);
 		}
 		// security measure to prevent arbitrary chunk generation
+		Catalogsystem.LOGGER.info("t2 xyz: {} {} {}", x, y, z);
 		if (!world.hasChunkAt(new BlockPos(x, y, z)))
 			return;
 		if (buttonID == 0) {
-	//		CompoundTag tag = new CompoundTag();
-			String string = textstate.get("id");
+//			CompoundTag tag = new CompoundTag();
+			String string = textState.get("id");
 //			tag.putString("id", id);
 			if (entity instanceof ServerPlayer _ent) {
-				NetworkHooks.openScreen(_ent, new MenuProvider() {
-
-					@Override
-					public Component getDisplayName() {
-						return Component.translatable("message.catalog_system.gui.total_catalog."+string);
-					}
-
-					@Override
-					public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-							FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-							buf.writeUtf(string);
-							return new CatalogEntryMenu(id, inventory, buf);
-					}
-				}, buf -> {buf.writeUtf(string);});
-			}		}
-
+				NetworkHooks.openScreen(
+					_ent,
+					new MenuProvider() {
+						@Override
+						public @NotNull Component getDisplayName() {
+							//total??
+							return Component.translatable("message.catalog_system.gui.entry_catalog." + string);
+						}
+						@Override
+						public AbstractContainerMenu createMenu(int id, @NotNull Inventory inventory, @NotNull Player player) {
+								FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+								buf.writeUtf(string);
+							Catalogsystem.LOGGER.info("2draw ???: {}", id);
+								return new CatalogEntryMenu(id, inventory, buf);
+						}
+					},
+					buf -> buf.writeUtf(string)
+				);
+			}
+		}
 	}
 
 	@SubscribeEvent
 	public static void registerMessage(FMLCommonSetupEvent event) {
-		Catalogsystem.addNetworkMessage(OpenEntryCatalogMenuButtonMessage.class, OpenEntryCatalogMenuButtonMessage::buffer, OpenEntryCatalogMenuButtonMessage::new, OpenEntryCatalogMenuButtonMessage::handler);
+		Catalogsystem.addNetworkMessage(OpenCatalogEntryMenuButtonMessage.class, OpenCatalogEntryMenuButtonMessage::buffer, OpenCatalogEntryMenuButtonMessage::new, OpenCatalogEntryMenuButtonMessage::handler);
 	}
 
 	public static void writeTextState(HashMap<String, String> map, FriendlyByteBuf buffer) {

@@ -23,9 +23,9 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class CatalogEntryMenu extends AbstractContainerMenu implements Supplier<Map<Integer, Slot>> {
-	public final static HashMap<String, Object> guistate = new HashMap<>();
+	public final static HashMap<String, Object> guiState = new HashMap<>();
 	public final Level world;
-	public final Player entity;
+	public final Player player;
 	public int x, y, z;
 	private ContainerLevelAccess access = ContainerLevelAccess.NULL;
 	private IItemHandler internal;
@@ -37,7 +37,7 @@ public class CatalogEntryMenu extends AbstractContainerMenu implements Supplier<
 	public String id;
 	public CatalogEntryMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
 		super(WeaponCatalogModMenus.CATALOG_ENTRY.get(), id);
-		this.entity = inv.player;
+		this.player = inv.player;
 		this.world = inv.player.level();
 
 

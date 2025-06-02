@@ -12,12 +12,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -25,7 +23,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
+
+import static net.exmo.catalogsystem.Catalogsystem.manager;
 
 public class CatalogHandle {
     private static Map<ResourceLocation, Catalog> catalogs = new HashMap<>();
@@ -80,7 +79,6 @@ public class CatalogHandle {
                 List<ItemStack> list=  event.event.getRegistryAccess().registryOrThrow(SlashBladeDefinition.REGISTRY_KEY).asLookup().listElements().sorted(SlashBladeDefinition.COMPARATOR)
                         .map(e -> e.get().getBlade()).toList();
 
-
                 for (ItemStack item : list) {
 
                     double attackDamage = 0;
@@ -111,7 +109,7 @@ public class CatalogHandle {
             MinecraftForge.EVENT_BUS.post(event1);
             catalogs.clear();
             event1.getCatalogs().forEach(CatalogHandle::registerCatalog);
-
+            manager.init();
         }
     }
 

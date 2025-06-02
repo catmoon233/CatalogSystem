@@ -3,20 +3,24 @@ package net.exmo.catalogsystem.content.gui;
 import se.mickelus.mutil.gui.GuiElement;
 import se.mickelus.mutil.gui.GuiRect;
 
-public class GuiToggleButtonBase extends GuiElement {
-    private final static int maxButtonNum = 6;
-    private final static int buttonGapWidth = 50;
-    private final static int buttonGapHeight = 50;
-    private final static int buttonWidth = 30;
-    private final static int buttonHeight = 30;
+import static net.exmo.catalogsystem.Catalogsystem.manager;
+import static net.exmo.catalogsystem.content.gui.CatalogManager.maxEntryNum;
 
-    public GuiToggleButtonBase(int imageWidth, int imageHeight) {
-        super((imageWidth - buttonWidth - 2 * buttonGapWidth) / 2,
-                (imageHeight - buttonHeight - buttonGapHeight) / 2,
-                buttonHeight + buttonGapHeight,
-                buttonWidth + 2 * buttonGapWidth);
-        int guiButtonBaseWidth = buttonWidth + 2 * buttonGapWidth;
-        int guiButtonBaseHeight = buttonHeight + buttonGapHeight;
-        this.addChild(new GuiRect(0, 0, guiButtonBaseWidth, guiButtonBaseHeight, 0x0000ff));
+public class GuiToggleButtonBase extends GuiElement {
+    public final static int toggleButtonGapWidth = 50;
+    public final static int toggleButtonGapHeight = 50;
+    public final static int toggleButtonWidth = 30;
+    public final static int toggleButtonHeight = 30;
+    public final static int togglesBaseWidth = toggleButtonWidth + 2 * toggleButtonGapWidth;
+    public final static int togglesBaseHeight = toggleButtonHeight + toggleButtonGapHeight;
+
+    public GuiToggleButtonBase(int imageWidth, int imageHeight, int pageIndex) {
+        super((imageWidth - togglesBaseWidth) / 2, (imageHeight - togglesBaseHeight) / 2, togglesBaseWidth, togglesBaseHeight);
+        this.addChild(new GuiRect(0, 0, togglesBaseWidth, togglesBaseHeight, 0x0000ff));//located pos
+        for (int i = 0; i < maxEntryNum; i++) {
+            if (manager.hasEntry(pageIndex, i)){
+                this.addChild(manager.getEntryToggleButton(pageIndex, i));
+            }
+        }
     }
 }

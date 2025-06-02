@@ -4,10 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.exmo.catalogsystem.Catalogsystem;
 import net.exmo.catalogsystem.content.Catalog;
 import net.exmo.catalogsystem.content.CatalogHandle;
+import net.exmo.catalogsystem.content.gui.GuiGuideButtonBase;
+import net.exmo.catalogsystem.content.gui.GuiPaddingButtonBase;
 import net.exmo.catalogsystem.content.gui.menu.CatalogEntryMenu;
-import net.exmo.catalogsystem.content.gui.menu.TotalCatalogMenu;
+import net.exmo.catalogsystem.content.gui.menu.CatalogTotalMenu;
 import net.exmo.catalogsystem.network.CatalogModVariables;
-import net.exmo.catalogsystem.network.OpenCatalogKeyMessage;
+import net.exmo.catalogsystem.network.OpenCatalogTotalMenuKeyMessage;
 import net.exmo.catalogsystem.util.ItemSelector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -21,21 +23,29 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.lwjgl.glfw.GLFW;
+import se.mickelus.mutil.gui.GuiButton;
+import se.mickelus.mutil.gui.GuiElement;
+import se.mickelus.mutil.gui.GuiRect;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static net.exmo.catalogsystem.Catalogsystem.manager;
+
 public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu> {
-	private final static HashMap<String, Object> guistate = TotalCatalogMenu.guistate;
+	private final static HashMap<String, Object> guistate = CatalogTotalMenu.guiState;
 	private final Level world;
 	private final int x, y, z;
-	private final Player entity;
-	private final HashMap<String, String> textstate = new HashMap<>();
+	private final Player player;
+	private final HashMap<String, String> textState = new HashMap<>();
 
 	private final Catalog catalog;
 
+	private final GuiElement guiGuideBase;
+	private final GuiElement guiDefault;
+	private final GuiElement guiButtonBase;
 	private List<ItemSelector> finalList; // 新增字段，用于存储最终列表
 	private List<ItemSelector> hadList_; // 新增字段，用于存储最终列表
 	private int hasCount; // 新增字段，用于存储已拥有物品的数量
@@ -47,13 +57,13 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 		this.y = container.y;
 		this.z = container.z;
 		this.catalog = CatalogHandle.getCatalogs().get(ResourceLocation.tryParse(container.id));
-		this.entity = container.entity;
+		this.player = container.player;
 		this.imageWidth = 176;
 		this.imageHeight = 166;
 
 		// 初始化时处理 finalList 和 hasCount
-		entity.getCapability(CatalogModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
-			capability.syncPlayerVariables(entity);
+		player.getCapability(CatalogModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			capability.syncPlayerVariables(player);
 
 			 hadList_ = new ArrayList<>(capability.HadWeaponGather).stream().filter(itemSelector -> catalog.get().keySet().stream().anyMatch(itemSelector1 -> itemSelector1.compareItemSelector(itemSelector))).toList();;
 			List<ItemSelector> reList = new ArrayList<>(catalog.get().keySet());
@@ -64,6 +74,14 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 			this.finalList.addAll(reList);
 			this.hasCount = hadList_.size();
 		});
+
+		this.guiDefault = new GuiElement(0, 0, this.imageWidth, this.imageHeight);
+		this.guiDefault.addChild(new GuiRect(0, 0, this.imageWidth, this.imageHeight, 0xff0000));//located pos
+		manager.registerCallbacks(textState, x, y, z, player);
+		this.guiButtonBase = new GuiPaddingButtonBase(imageWidth, imageHeight, 0, container.id);
+		this.guiGuideBase = new GuiGuideButtonBase(imageWidth, imageHeight);
+		this.guiDefault.addChild(guiGuideBase);
+		this.guiDefault.addChild(guiButtonBase);
 	}
 
 	@Override
@@ -81,6 +99,16 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 	}
 
 
+	@Override
+	public boolean mouseClicked(double d, double b, int p_97750_) {
+		for (GuiElement guiElement : this.guiButtonBase.getChildren()){
+			if (guiElement instanceof GuiButton button && button.onMouseClick((int) d, (int) b, p_97750_)) return true;
+		}
+		for (GuiElement guiElement : this.guiGuideBase.getChildren()){
+			if (guiElement instanceof GuiButton button && button.onMouseClick((int) d, (int) b, p_97750_)) return true;
+		}
+		return super.mouseClicked(d, b, p_97750_);
+	}
 
 
 	@Override
@@ -139,7 +167,12 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 
 		guiGraphics.blit(new ResourceLocation("weapon_catalog:textures/screens/weapon_catalog.png"), this.leftPos - 39, this.topPos - 20, 0, 0, 248, 190, 248, 190);
 
-		entity.getCapability(CatalogModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+		int x = (this.width - this.imageWidth) / 2;
+		int y = (this.height - this.imageHeight) / 2;
+		this.guiDefault.updateFocusState(x, y, gx, gy);
+		this.guiDefault.draw(guiGraphics, x, y, this.width, this.height, gx, gy, 1.0F);
+
+		player.getCapability(CatalogModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
 			pages = gatherToStingMapIndex(finalList, 96); // 使用初始化时计算的 finalList
 
 			List<ItemSelector> currentPageItems = pages.get(currentPage);
@@ -209,8 +242,8 @@ public class CatalogEntryScreen extends AbstractContainerScreen<CatalogEntryMenu
 	@Override
 	public boolean keyPressed(int key, int b, int c) {
 		if (key == GLFW.GLFW_KEY_E){
-			Catalogsystem.PACKET_HANDLER.sendToServer(new OpenCatalogKeyMessage(0, 0));
-			OpenCatalogKeyMessage.pressAction(Minecraft.getInstance().player, 0, 0);
+			Catalogsystem.PACKET_HANDLER.sendToServer(new OpenCatalogTotalMenuKeyMessage(0, 0));
+			OpenCatalogTotalMenuKeyMessage.pressAction(Minecraft.getInstance().player, 0, 0);
 			return true;
 		}
 		if (key == 256) {
