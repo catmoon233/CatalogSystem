@@ -56,7 +56,7 @@ public class OpenCatalogTotalMenuKeyMessage {
 			return;
 		if (type == 0) {
 			manager.resetScreen();
-			manager.openScreen(() -> new PlayerUtil.MenuGen<>(CatalogTotalMenu.class).OpenGui(entity, Component.literal("Catalog")));
+			manager.openScreen(() -> new PlayerUtil.MenuGen<>(CatalogTotalMenu.class).OpenGui(entity, Component.literal("Catalog")), 1);
 		}
 	}
 

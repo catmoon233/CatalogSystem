@@ -37,15 +37,16 @@ public class CatalogTotalScreen extends AbstractContainerScreen<CatalogTotalMenu
 
 		manager.registerCallbacks(textState, x, y, z, player);
 
-		if (container.id.matches(String.valueOf(1))) {
-			pageIndex = 1;
-		} else {
-			pageIndex = 0;
-		}
-        Catalogsystem.LOGGER.info("draw page: {} {}", pageIndex, container.id);
 		this.imageWidth = 176;
 		this.imageHeight = 166;
 		this.guiDefault = new GuiElement(0, 0, this.imageWidth, this.imageHeight);
+
+		if (container.id.matches(String.valueOf(1))) {
+			pageIndex = 1;
+			this.guiDefault.addChild(new GuiText(28, this.imageHeight / 2 - 5, this.imageWidth, "Fake page used for test"));
+		} else {
+			pageIndex = 0;
+		}
 		this.guiDefault.addChild(new GuiRect(0, 0, this.imageWidth, this.imageHeight, 0xff0000));//located pos
 		this.guiButtonBase = new GuiToggleButtonBase(imageWidth, imageHeight, pageIndex);
 		this.guiGuideBase = new GuiGuideButtonBase(imageWidth, imageHeight, pageIndex, player, textState, x, y, z);

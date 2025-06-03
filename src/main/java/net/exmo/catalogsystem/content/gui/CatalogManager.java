@@ -5,7 +5,6 @@ import net.exmo.catalogsystem.content.Catalog;
 import net.exmo.catalogsystem.content.CatalogHandle;
 import net.exmo.catalogsystem.network.OpenCatalogEntryMenuButtonMessage;
 import net.exmo.catalogsystem.network.OpenCatalogTotalMenuButtonMessage;
-import net.exmo.catalogsystem.network.OpenCatalogTotalMenuKeyMessage;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import se.mickelus.mutil.gui.GuiButton;
@@ -15,7 +14,13 @@ import java.util.*;
 import static net.exmo.catalogsystem.Catalogsystem.manager;
 
 public class CatalogManager {
-    private final Stack<Runnable> screens = new Stack<>();
+    private record screenNode(Runnable open, int depth) {
+        public void run() {
+            open.run();
+        }
+    }
+
+    private final Stack<screenNode> screens = new Stack<>();
     public final static int maxEntryNum = 6;
     private final Map<ResourceLocation, Catalog> catalogs = CatalogHandle.getCatalogs();
     private Map<Integer, List<GuiEntryButton>> pages;
@@ -79,7 +84,7 @@ public class CatalogManager {
 
         for (List<GuiEntryButton> tempPage : pages.values()) {
             for (GuiEntryButton entry : tempPage) {
-                entry.registerCallback(() -> manager.openScreen(() -> openCatalogEntry(entry.getEntry().getKey().toString(), textState, x, y, z, player)));
+                entry.registerCallback(() -> manager.openScreen(() -> openCatalogEntry(entry.getEntry().getKey().toString(), textState, x, y, z, player), 2));
 //                Catalogsystem.LOGGER.info("[CATALOG] Successfully register callback {}", entry.getEntry().getKey().toString());
             }
         }
@@ -89,15 +94,18 @@ public class CatalogManager {
         return pages.size();
     }
 
-    public void openScreen(Runnable r) {
-        screens.push(r).run();
+    public void openScreen(Runnable open, int depth) {
+        screens.push(new screenNode(open, depth)).run();
         Catalogsystem.LOGGER.error("[CATALOG] push screen! length:{}", screens.size());
     }
 
     private void popScreen() {
-        screens.pop();
+        int depth = screens.pop().depth();
+        while(screens.peek().depth() == depth) {
+            Catalogsystem.LOGGER.error("[CATALOG] popping up screen! length:{}", screens.size());
+            screens.pop();
+        }
         screens.peek().run();
-        Catalogsystem.LOGGER.error("[CATALOG] popping up screen! length:{}", screens.size());
     }
 
     public Runnable getBackScreen() {
@@ -105,7 +113,7 @@ public class CatalogManager {
     }
 
     public boolean hasBackScreen() {
-        return screens.size() > 1;
+        return screens.size() > 1 && screens.peek().depth() > 1;
     }
 
     public void resetScreen() {

@@ -83,7 +83,6 @@ public class OpenCatalogTotalMenuButtonMessage {
 		//TODO: x y z is player location(lower)
 		if (!world.hasChunkAt(new BlockPos(x, y, z)))
 			return;
-		Catalogsystem.LOGGER.info("t3 xyz: {} {} {}", x, y, z);
 		String string = textState.get("id");
 		if (player instanceof ServerPlayer _ent) {
 			NetworkHooks.openScreen(
@@ -97,7 +96,6 @@ public class OpenCatalogTotalMenuButtonMessage {
 					public AbstractContainerMenu createMenu(int id, @NotNull Inventory inventory, @NotNull Player player) {
 						FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
 						buf.writeUtf(string);
-						Catalogsystem.LOGGER.info("2draw page: {}", pageIndex);
 						return new CatalogTotalMenu(id, inventory, buf, pageIndex);
 					}
 				},

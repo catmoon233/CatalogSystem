@@ -33,11 +33,11 @@ public class GuiGuideButtonBase extends GuiElement {
         this.addChild(new GuiText(imageWidth - pageTextWidth, imageHeight - pageTextHeight, pageTextWidth, String.valueOf(pageIndex + 1)));
         if (pageIndex > 0) {
             this.addChild(new GuiButton(-GuideButtonWidth, imageHeight - backButtonHeight - GuideButtonHeight, GuideButtonWidth, GuideButtonHeight, "<-",
-                    manager.getGuideCallback(textState, x, y, z, player, pageIndex - 1)));
+                    () -> manager.openScreen(manager.getGuideCallback(textState, x, y, z, player, pageIndex - 1), 1)));
         }
         if (pageIndex < manager.getPageCount()) {
             this.addChild(new GuiButton(imageWidth, imageHeight - backButtonHeight - GuideButtonHeight, GuideButtonWidth, GuideButtonHeight, "->",
-                    manager.getGuideCallback(textState, x, y, z, player, pageIndex + 1)));
+                    () -> manager.openScreen(manager.getGuideCallback(textState, x, y, z, player, pageIndex + 1), 1)));
         }
     }
 }

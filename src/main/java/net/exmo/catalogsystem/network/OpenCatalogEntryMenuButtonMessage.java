@@ -80,7 +80,6 @@ public class OpenCatalogEntryMenuButtonMessage {
 			guiState.put(key, value);
 		}
 		// security measure to prevent arbitrary chunk generation
-		Catalogsystem.LOGGER.info("t2 xyz: {} {} {}", x, y, z);
 		if (!world.hasChunkAt(new BlockPos(x, y, z)))
 			return;
 		if (buttonID == 0) {
@@ -100,7 +99,6 @@ public class OpenCatalogEntryMenuButtonMessage {
 						public AbstractContainerMenu createMenu(int id, @NotNull Inventory inventory, @NotNull Player player) {
 								FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
 								buf.writeUtf(string);
-							Catalogsystem.LOGGER.info("2draw ???: {}", id);
 								return new CatalogEntryMenu(id, inventory, buf);
 						}
 					},
